@@ -7,5 +7,10 @@ description = "An automatic music transcription program"
 license = "GPL-3.0-or-later"
 publish = false
 
-[dependencies]
+[[bin]]
+name = "olscorer-cli"
+path = "src/olscorer-cli/main.rs"
 
+[dependencies]
+# CLI
+clap = {version = "4.3", features = ["derive"]}
