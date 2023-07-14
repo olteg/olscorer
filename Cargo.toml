@@ -1,0 +1,11 @@
+[package]
+name = "olscorer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Oleg Tretieu"]
+description = "An automatic music transcription program"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+
