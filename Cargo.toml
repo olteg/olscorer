@@ -9,7 +9,7 @@ publish = false
 
 [[bin]]
 name = "olscorer-cli"
-path = "src/olscorer-cli/main.rs"
+path = "src/olscorer_cli/main.rs"
 
 [dependencies]
 # CLI
