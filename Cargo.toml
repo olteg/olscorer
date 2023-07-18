@@ -14,3 +14,9 @@ path = "src/olscorer_cli/main.rs"
 [dependencies]
 # CLI
 clap = {version = "4.3", features = ["derive"]}
+
+# Audio
+hound = "3.5"
+
+# Errors
+thiserror = "1.0"
