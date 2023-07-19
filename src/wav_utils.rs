@@ -156,6 +156,43 @@ mod tests {
     }
 
     #[test]
+    fn different_sample_rates_read_correctly() {
+        let mut filepath_8000 = std::path::PathBuf::new();
+        filepath_8000.push("./resources/test/sine_440Hz_8000samples_s16bit_8000Hz_mono.wav");
+
+        let wav_file_data_8000 =
+            read_wav_file(filepath_8000).expect("Expected valid wav file data");
+
+        assert_eq!(8000, wav_file_data_8000.sample_rate);
+
+        let mut filepath_22050 = std::path::PathBuf::new();
+        filepath_22050.push("./resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
+
+        let wav_file_data_22050 =
+            read_wav_file(filepath_22050).expect("Expected valid wav file data");
+
+        assert_eq!(22050, wav_file_data_22050.sample_rate);
+
+        let mut filepath_44100 = std::path::PathBuf::new();
+        filepath_44100.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+
+        let wav_file_data_44100 =
+            read_wav_file(filepath_44100).expect("Expected valid wav file data");
+
+        assert_eq!(44100, wav_file_data_44100.sample_rate);
+        // Duration (in seconds) should be the same for all 3 files
+        // duration in seconds = duration in samples / sample rate
+        assert_eq!(
+            wav_file_data_8000.duration / wav_file_data_8000.sample_rate,
+            wav_file_data_44100.duration / wav_file_data_44100.sample_rate
+        );
+        assert_eq!(
+            wav_file_data_22050.duration / wav_file_data_22050.sample_rate,
+            wav_file_data_44100.duration / wav_file_data_44100.sample_rate
+        );
+    }
+
+    #[test]
     #[should_panic(expected = "Expected valid wav file data")]
     fn reading_non_wav_file_should_panic() {
         let mut filepath = std::path::PathBuf::new();
