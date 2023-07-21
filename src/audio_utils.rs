@@ -24,7 +24,7 @@ use std::error::Error;
 
 const MAX_24BIT: i32 = 16777215;
 
-pub struct WavFileData {
+pub struct AudioData {
     /// Sample rate (in Hz)
     pub sample_rate: u32,
     /// Duration (in samples) of the wav file
@@ -32,7 +32,7 @@ pub struct WavFileData {
     pub samples: Vec<f32>,
 }
 
-pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<WavFileData, Box<dyn Error>> {
+pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<AudioData, Box<dyn Error>> {
     let reader = WavReader::open(filepath)?;
 
     let sample_rate = reader.spec().sample_rate;
@@ -78,25 +78,25 @@ pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<WavFileData, Box<dy
         _ => return Err(Box::new(UnsupportedChannelCount(num_channels))),
     };
 
-    let wav_file_data = WavFileData {
+    let audio_data = AudioData {
         sample_rate,
         duration,
         samples,
     };
-    Ok(wav_file_data)
+    Ok(audio_data)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::wav_utils::read_wav_file;
+    use crate::audio_utils::read_wav_file;
 
     #[test]
     fn sample_rate_read_correctly() {
         let mut filepath = std::path::PathBuf::new();
         filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-        let wav_file_data = read_wav_file(filepath).expect("Expected valid wav file data");
-        assert_eq!(44100, wav_file_data.sample_rate);
+        let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+        assert_eq!(44100, audio_data.sample_rate);
     }
 
     #[test]
@@ -104,8 +104,8 @@ mod tests {
         let mut filepath = std::path::PathBuf::new();
         filepath.push("./resources/test/sine_660Hz_22050samples_s32bit_44100Hz_mono.wav");
 
-        let wav_file_data = read_wav_file(filepath).expect("Expected valid wav file data");
-        assert_eq!(22050, wav_file_data.duration);
+        let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+        assert_eq!(22050, audio_data.duration);
     }
 
     #[test]
@@ -113,9 +113,9 @@ mod tests {
         let mut filepath = std::path::PathBuf::new();
         filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_stereo.wav");
 
-        let wav_file_data = read_wav_file(filepath).expect("Expected valid wav file data");
-        assert_eq!(44100, wav_file_data.sample_rate);
-        assert_eq!(44100, wav_file_data.duration);
+        let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+        assert_eq!(44100, audio_data.sample_rate);
+        assert_eq!(44100, audio_data.duration);
     }
 
     #[test]
@@ -123,35 +123,35 @@ mod tests {
         let mut filepath_signed_16 = std::path::PathBuf::new();
         filepath_signed_16.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-        let wav_file_data_signed_16 =
+        let audio_data_signed_16 =
             read_wav_file(filepath_signed_16).expect("Expected valid wav file data");
 
         let mut filepath_signed_24 = std::path::PathBuf::new();
         filepath_signed_24.push("./resources/test/sine_440Hz_44100samples_s24bit_44100Hz_mono.wav");
 
-        let wav_file_data_signed_24 =
+        let audio_data_signed_24 =
             read_wav_file(filepath_signed_24).expect("Expected valid wav file data");
 
         let mut filepath_float_32 = std::path::PathBuf::new();
         filepath_float_32.push("./resources/test/sine_440Hz_44100samples_f32bit_44100Hz_mono.wav");
 
-        let wav_file_data_float_32 =
+        let audio_data_float_32 =
             read_wav_file(filepath_float_32).expect("Expected valid wav file data");
         assert_eq!(
-            wav_file_data_float_32.sample_rate,
-            wav_file_data_signed_16.sample_rate
+            audio_data_float_32.sample_rate,
+            audio_data_signed_16.sample_rate
         );
         assert_eq!(
-            wav_file_data_float_32.sample_rate,
-            wav_file_data_signed_24.sample_rate
+            audio_data_float_32.sample_rate,
+            audio_data_signed_24.sample_rate
         );
         assert_eq!(
-            wav_file_data_float_32.duration,
-            wav_file_data_signed_16.duration
+            audio_data_float_32.duration,
+            audio_data_signed_16.duration
         );
         assert_eq!(
-            wav_file_data_float_32.duration,
-            wav_file_data_signed_24.duration
+            audio_data_float_32.duration,
+            audio_data_signed_24.duration
         );
     }
 
@@ -160,35 +160,35 @@ mod tests {
         let mut filepath_8000 = std::path::PathBuf::new();
         filepath_8000.push("./resources/test/sine_440Hz_8000samples_s16bit_8000Hz_mono.wav");
 
-        let wav_file_data_8000 =
+        let audio_data_8000 =
             read_wav_file(filepath_8000).expect("Expected valid wav file data");
 
-        assert_eq!(8000, wav_file_data_8000.sample_rate);
+        assert_eq!(8000, audio_data_8000.sample_rate);
 
         let mut filepath_22050 = std::path::PathBuf::new();
         filepath_22050.push("./resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
 
-        let wav_file_data_22050 =
+        let audio_data_22050 =
             read_wav_file(filepath_22050).expect("Expected valid wav file data");
 
-        assert_eq!(22050, wav_file_data_22050.sample_rate);
+        assert_eq!(22050, audio_data_22050.sample_rate);
 
         let mut filepath_44100 = std::path::PathBuf::new();
         filepath_44100.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-        let wav_file_data_44100 =
+        let audio_data_44100 =
             read_wav_file(filepath_44100).expect("Expected valid wav file data");
 
-        assert_eq!(44100, wav_file_data_44100.sample_rate);
+        assert_eq!(44100, audio_data_44100.sample_rate);
         // Duration (in seconds) should be the same for all 3 files
         // duration in seconds = duration in samples / sample rate
         assert_eq!(
-            wav_file_data_8000.duration / wav_file_data_8000.sample_rate,
-            wav_file_data_44100.duration / wav_file_data_44100.sample_rate
+            audio_data_8000.duration / audio_data_8000.sample_rate,
+            audio_data_44100.duration / audio_data_44100.sample_rate
         );
         assert_eq!(
-            wav_file_data_22050.duration / wav_file_data_22050.sample_rate,
-            wav_file_data_44100.duration / wav_file_data_44100.sample_rate
+            audio_data_22050.duration / audio_data_22050.sample_rate,
+            audio_data_44100.duration / audio_data_44100.sample_rate
         );
     }
 

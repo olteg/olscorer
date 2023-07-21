@@ -19,4 +19,4 @@
  */
 
 mod errors;
-mod wav_utils;
+mod audio_utils;
