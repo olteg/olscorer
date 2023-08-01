@@ -41,7 +41,7 @@ pub struct AudioData {
 }
 
 impl AudioData {
-    /// Return a vector of audio frames from the samples in the AudioData struct
+    /// Returns a vector of audio frames from the samples in the AudioData struct
     ///
     /// # Arguments
     ///

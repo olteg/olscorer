@@ -18,5 +18,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod errors;
 mod audio_utils;
+mod errors;
+mod pitch_detection;

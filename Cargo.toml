@@ -20,3 +20,6 @@ hound = "3.5"
 
 # Errors
 thiserror = "1.0"
+
+# Pitch detection
+rustfft = "6.1"
