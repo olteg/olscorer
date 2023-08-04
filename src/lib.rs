@@ -21,3 +21,4 @@
 mod audio_utils;
 mod errors;
 mod pitch_detection;
+mod transcription;

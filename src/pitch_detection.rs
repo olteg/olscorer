@@ -29,6 +29,7 @@ pub trait PitchDetector {
 }
 
 /// Struct for the McLeod Pitch Method pitch detection algorithm
+#[derive(Clone)]
 pub struct Mpm {
     threshold: f64,
     sample_rate: u32,
@@ -47,7 +48,8 @@ impl PitchDetector for Mpm {
         let abs_max_value = match samples.iter().max_by(|a, b| a.abs().total_cmp(&b.abs())) {
             Some(value) => *value,
             None => return None,
-        }.abs();
+        }
+        .abs();
 
         let samples: Vec<f64> = samples
             .iter()
