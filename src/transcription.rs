@@ -46,6 +46,7 @@ impl fmt::Display for Note {
 
 /// Enum representing the name of a musical note, consisting of the note's
 /// letter name and octave
+#[derive(PartialEq)]
 pub enum NoteName {
     A(u8),
     ASharp(u8),

@@ -17,3 +17,5 @@ For example:
 
 ## Notes
 The sine wave test files have been generated using Audacity.
+
+The audio files featuring instruments are generated using Musescore 3.

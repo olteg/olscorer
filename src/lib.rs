@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-mod audio_utils;
+pub mod audio_utils;
 mod errors;
 mod pitch_detection;
-mod transcription;
+pub mod transcription;

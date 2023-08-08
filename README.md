@@ -5,7 +5,26 @@
 ## Installation
 Olscorer is written in the Rust programming language. To build the project, you will need to have Rust version 1.70.0+.
 
-Run `cargo build` in the root directory to build the project and `cargo run` to build and run.
+Run `cargo build --release` in the root directory to build the project in release mode and `cargo run` to build and run.
+
+## Usage
+To run Olscorer from the command line, run the `olscorer-cli` executable with the path to the wav file you would like to transcribe as an argument.
+#### Input:
+```
+./olscorer-cli example_audio.wav
+```
+#### Output:
+```
+C5, E5, G5
+```
+
+The output is a comma-separated list of notes detected in the audio.
+
+## Future Improvements
+
+- A more useful CLI output. The current output is very minimal. In the future, a more useful output such as a MusicXML file could be used.
+- GUI
+- Polyphonic music transcription. Currently, the program can only transcribe monophonic music.
 
 ## Pitch Detection Methods
 
