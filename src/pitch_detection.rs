@@ -200,7 +200,7 @@ impl Mpm {
         // Find first zero_crossing
         let mut start_index = 0;
 
-        while nsdf[start_index] > 0.0 {
+        while start_index < nsdf.len() && nsdf[start_index] > 0.0 {
             start_index += 1;
         }
 
