@@ -29,7 +29,7 @@ pub struct Frame {
     /// Starting position of this frame in the original audio
     pub start_pos: usize,
     /// Samples contained in this frame
-    pub samples: Vec<f32>,
+    pub samples: Vec<f64>,
 }
 
 pub struct AudioData {
@@ -37,7 +37,7 @@ pub struct AudioData {
     pub sample_rate: u32,
     /// Duration (in samples) of the wav file
     pub duration: u32,
-    pub samples: Vec<f32>,
+    pub samples: Vec<f64>,
 }
 
 impl AudioData {
@@ -68,7 +68,7 @@ impl AudioData {
             frame_samples.clone_from_slice(&self.samples[i..i + frame_width]);
             let frame = Frame {
                 start_pos: i,
-                samples: frame_samples,
+                samples: frame_samples.into_iter().map(|s| s as f64).collect(),
             };
 
             frames.push(frame);
@@ -122,7 +122,10 @@ pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<AudioData, Box<dyn 
             left_samples
         }
         _ => return Err(Box::new(UnsupportedChannelCount(num_channels))),
-    };
+    }
+    .into_iter()
+    .map(|s| s as f64)
+    .collect();
 
     let audio_data = AudioData {
         sample_rate,
@@ -132,9 +135,20 @@ pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<AudioData, Box<dyn 
     Ok(audio_data)
 }
 
+/// Calculates the root mean square of the input samples
+///
+/// Returns the root mean square wrapped in Some if the samples vector is
+/// non-empty, otherwise returns None.
+pub fn root_mean_square(samples: Vec<f64>) -> Option<f64> {
+    if samples.len() == 0 {
+        return None;
+    }
+    Some((samples.iter().map(|x| x * x).sum::<f64>() / samples.len() as f64).sqrt())
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::audio_utils::read_wav_file;
+    use crate::audio_utils::{read_wav_file, root_mean_square};
 
     /// Tests for wav file reader
     #[test]
@@ -346,5 +360,22 @@ mod tests {
             10,
             audio_data.get_frames(4410, 4410, None, Some(50000)).len()
         );
+    }
+
+    #[test]
+    fn root_mean_square_works_correctly() {
+        assert_eq!(0.0, root_mean_square(vec![0.0]).unwrap());
+        assert_eq!(1.0, root_mean_square(vec![1.0, 1.0]).unwrap());
+        assert_eq!(1.0, root_mean_square(vec![-1.0, 1.0]).unwrap());
+        assert_eq!(1.0, root_mean_square(vec![-1.0, 1.0, 1.0]).unwrap());
+        assert_eq!(10.0, root_mean_square(vec![-10.0, -10.0]).unwrap());
+        assert!(
+            (5.0 * 10.0f64.sqrt()) - root_mean_square(vec![-10.0, 20.0]).unwrap().abs() < 1e-12
+        );
+    }
+
+    #[test]
+    fn root_mean_square_of_empty_vector_is_none() {
+        assert_eq!(None, root_mean_square(vec![]));
     }
 }

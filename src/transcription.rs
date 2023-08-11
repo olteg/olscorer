@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::audio_utils::AudioData;
+use crate::audio_utils::{root_mean_square, AudioData, Frame};
 use crate::pitch_detection::{Mpm, PitchDetector};
 use std::fmt;
 
@@ -133,6 +133,19 @@ impl Transcriber {
         let step_size = 1024;
 
         let frames = audio_data.get_frames(frame_width, step_size, None, None);
+
+        // Filter out silent frames by removing frames where the RMS is less
+        // than 20% of the RMS of the entire audio
+        // TODO: Implement a more sophisticated algorithm for filtering out
+        // silent frames
+        let audio_rms =
+            root_mean_square(audio_data.samples.into_iter().map(|s| s as f64).collect())
+                .unwrap_or(0.0);
+
+        let frames: Vec<Frame> = frames
+            .into_iter()
+            .filter(|f| root_mean_square(f.samples.clone()).unwrap_or(0.0) >= 0.2 * audio_rms)
+            .collect();
 
         // Get the pitch in each frame
         let mpm = Mpm::new(0.7, audio_data.sample_rate);
