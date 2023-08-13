@@ -128,6 +128,30 @@ impl Transcriber {
     ///
     /// Returns a vector of the notes detected in the audio.
     pub fn get_notes(audio_data: AudioData) -> Vec<Note> {
+        // Scale samples
+        let abs_max_value = match audio_data.samples.iter().max_by(|a, b| a.abs().total_cmp(&b.abs())) {
+            Some(value) => *value,
+            None => return vec![],
+        }
+        .abs();
+
+        let samples: Vec<f64> = audio_data.samples
+            .iter()
+            .map(|x| {
+                if abs_max_value >= f64::EPSILON {
+                    x / abs_max_value
+                } else {
+                    0.0
+                }
+            })
+            .collect();
+
+        let audio_data = AudioData {
+            sample_rate: audio_data.sample_rate,
+            duration: audio_data.duration,
+            samples: samples,
+        };
+
         // Split samples into frames
         let frame_width = 4096;
         let step_size = 1024;

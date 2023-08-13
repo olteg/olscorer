@@ -45,23 +45,6 @@ impl PitchDetector for Mpm {
     /// If a pitch is detected, the frequency is returned, otherwise
     /// None is returned.
     fn get_pitch(self, samples: Vec<f64>) -> Option<f64> {
-        let abs_max_value = match samples.iter().max_by(|a, b| a.abs().total_cmp(&b.abs())) {
-            Some(value) => *value,
-            None => return None,
-        }
-        .abs();
-
-        let samples: Vec<f64> = samples
-            .iter()
-            .map(|x| {
-                if abs_max_value >= f64::EPSILON {
-                    x / abs_max_value
-                } else {
-                    0.0
-                }
-            })
-            .collect();
-
         let nsdf = Mpm::fast_nsdf(samples);
 
         match self.get_mpm_peak(nsdf) {
