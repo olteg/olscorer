@@ -19,7 +19,7 @@
  */
 
 use clap::Parser;
-use olscorer::audio_utils::read_wav_file;
+use olscorer::audio_utils::AudioData;
 use olscorer::transcription::Transcriber;
 
 #[derive(Debug, Parser)]
@@ -32,7 +32,7 @@ struct OlscorerArgs {
 fn main() {
     let args = OlscorerArgs::parse();
 
-    let audio_data = read_wav_file(args.input_file).expect("Error reading wav file");
+    let audio_data = AudioData::read_wav_file(args.input_file).expect("Error reading wav file");
 
     // Get all the notes in the audio
     let all_notes = Transcriber::get_notes(audio_data);

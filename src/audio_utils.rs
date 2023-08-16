@@ -128,88 +128,93 @@ impl AudioData {
 
         Ok(frames)
     }
-}
 
-pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<AudioData, Box<dyn Error>> {
-    let reader = WavReader::open(filepath)?;
+    /// Gets the audio data from a wav file
+    ///
+    /// Returns an AudioData struct wrapped in Ok if there are no errors, and
+    /// an Error otherwise.
+    pub fn read_wav_file(filepath: std::path::PathBuf) -> Result<AudioData, Box<dyn Error>> {
+        let reader = WavReader::open(filepath)?;
 
-    let sample_rate = reader.spec().sample_rate;
-    let duration = reader.duration();
-    let bit_depth = reader.spec().bits_per_sample;
-    let num_channels = reader.spec().channels;
+        let sample_rate = reader.spec().sample_rate;
+        let duration = reader.duration();
+        let bit_depth = reader.spec().bits_per_sample;
+        let num_channels = reader.spec().channels;
 
-    // Read samples as floats
-    let samples: Vec<f32> = match reader.spec().sample_format {
-        SampleFormat::Float => reader
-            .into_samples::<f32>()
-            .map(|sample| sample.unwrap())
-            .collect(),
-        SampleFormat::Int => {
-            let max: i32 = match bit_depth {
-                16 => i16::MAX as i32,
-                24 => MAX_24BIT,
-                32 => i32::MAX,
-                _ => return Err(Box::new(UnsupportedBitDepth(bit_depth))),
-            };
-            reader
-                .into_samples::<i32>()
-                .map(|sample| sample.unwrap() as f32 / max as f32)
-                .collect()
-        }
-    };
-
-    // For stereo audio, only take samples from the left channel
-    // TODO: Implement other methods to combine multiple channels
-    // into one
-    let samples = match num_channels {
-        1 => samples,
-        2 => {
-            let mut left_samples = Vec::with_capacity(samples.len() / 2);
-
-            // Samples are interleaved, samples from the left channel
-            // are at even indices
-            for sample in samples.iter().step_by(2) {
-                left_samples.push(*sample);
+        // Read samples as floats
+        let samples: Vec<f32> = match reader.spec().sample_format {
+            SampleFormat::Float => reader
+                .into_samples::<f32>()
+                .map(|sample| sample.unwrap())
+                .collect(),
+            SampleFormat::Int => {
+                let max: i32 = match bit_depth {
+                    16 => i16::MAX as i32,
+                    24 => MAX_24BIT,
+                    32 => i32::MAX,
+                    _ => return Err(Box::new(UnsupportedBitDepth(bit_depth))),
+                };
+                reader
+                    .into_samples::<i32>()
+                    .map(|sample| sample.unwrap() as f32 / max as f32)
+                    .collect()
             }
-            left_samples
+        };
+
+        // For stereo audio, only take samples from the left channel
+        // TODO: Implement other methods to combine multiple channels
+        // into one
+        let samples = match num_channels {
+            1 => samples,
+            2 => {
+                let mut left_samples = Vec::with_capacity(samples.len() / 2);
+
+                // Samples are interleaved, samples from the left channel
+                // are at even indices
+                for sample in samples.iter().step_by(2) {
+                    left_samples.push(*sample);
+                }
+                left_samples
+            }
+            _ => return Err(Box::new(UnsupportedChannelCount(num_channels))),
         }
-        _ => return Err(Box::new(UnsupportedChannelCount(num_channels))),
-    }
-    .into_iter()
-    .map(|s| s as f64)
-    .collect();
+        .into_iter()
+        .map(|s| s as f64)
+        .collect();
 
-    let audio_data = AudioData {
-        sample_rate,
-        duration,
-        samples,
-    };
-    Ok(audio_data)
-}
-
-/// Calculates the root mean square of the input samples
-///
-/// Returns the root mean square wrapped in Some if the samples vector is
-/// non-empty, otherwise returns None.
-pub fn root_mean_square(samples: Vec<f64>) -> Option<f64> {
-    if samples.len() == 0 {
-        return None;
+        let audio_data = AudioData {
+            sample_rate,
+            duration,
+            samples,
+        };
+        Ok(audio_data)
     }
-    Some((samples.iter().map(|x| x * x).sum::<f64>() / samples.len() as f64).sqrt())
+
+    /// Calculates the root mean square of the input samples
+    ///
+    /// Returns the root mean square wrapped in Some if the samples vector is
+    /// non-empty, otherwise returns None.
+    pub fn root_mean_square(samples: Vec<f64>) -> Option<f64> {
+        if samples.len() == 0 {
+            return None;
+        }
+        Some((samples.iter().map(|x| x * x).sum::<f64>() / samples.len() as f64).sqrt())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     /// Tests for wav file reader
     mod read_wav_file_tests {
-        use crate::audio_utils::read_wav_file;
+        use crate::audio_utils::AudioData;
 
         #[test]
         fn sample_rate_read_correctly() {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             assert_eq!(44100, audio_data.sample_rate);
         }
 
@@ -218,7 +223,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_660Hz_22050samples_s32bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             assert_eq!(22050, audio_data.duration);
         }
 
@@ -227,7 +233,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_stereo.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             assert_eq!(44100, audio_data.sample_rate);
             assert_eq!(44100, audio_data.duration);
         }
@@ -239,21 +246,21 @@ mod tests {
                 .push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data_signed_16 =
-                read_wav_file(filepath_signed_16).expect("Expected valid wav file data");
+                AudioData::read_wav_file(filepath_signed_16).expect("Expected valid wav file data");
 
             let mut filepath_signed_24 = std::path::PathBuf::new();
             filepath_signed_24
                 .push("./resources/test/sine_440Hz_44100samples_s24bit_44100Hz_mono.wav");
 
             let audio_data_signed_24 =
-                read_wav_file(filepath_signed_24).expect("Expected valid wav file data");
+                AudioData::read_wav_file(filepath_signed_24).expect("Expected valid wav file data");
 
             let mut filepath_float_32 = std::path::PathBuf::new();
             filepath_float_32
                 .push("./resources/test/sine_440Hz_44100samples_f32bit_44100Hz_mono.wav");
 
             let audio_data_float_32 =
-                read_wav_file(filepath_float_32).expect("Expected valid wav file data");
+                AudioData::read_wav_file(filepath_float_32).expect("Expected valid wav file data");
             assert_eq!(
                 audio_data_float_32.sample_rate,
                 audio_data_signed_16.sample_rate
@@ -272,7 +279,7 @@ mod tests {
             filepath_8000.push("./resources/test/sine_440Hz_8000samples_s16bit_8000Hz_mono.wav");
 
             let audio_data_8000 =
-                read_wav_file(filepath_8000).expect("Expected valid wav file data");
+                AudioData::read_wav_file(filepath_8000).expect("Expected valid wav file data");
 
             assert_eq!(8000, audio_data_8000.sample_rate);
 
@@ -280,7 +287,7 @@ mod tests {
             filepath_22050.push("./resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
 
             let audio_data_22050 =
-                read_wav_file(filepath_22050).expect("Expected valid wav file data");
+                AudioData::read_wav_file(filepath_22050).expect("Expected valid wav file data");
 
             assert_eq!(22050, audio_data_22050.sample_rate);
 
@@ -288,7 +295,7 @@ mod tests {
             filepath_44100.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data_44100 =
-                read_wav_file(filepath_44100).expect("Expected valid wav file data");
+                AudioData::read_wav_file(filepath_44100).expect("Expected valid wav file data");
 
             assert_eq!(44100, audio_data_44100.sample_rate);
             // Duration (in seconds) should be the same for all 3 files
@@ -309,20 +316,21 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/README.md");
 
-            read_wav_file(filepath).expect("Expected valid wav file data");
+            AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
         }
     }
 
     /// Tests for AudioData methods
     mod get_frames_tests {
-        use crate::audio_utils::read_wav_file;
+        use crate::audio_utils::AudioData;
 
         #[test]
         fn returns_correct_number_of_frames() {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
 
             assert_eq!(10, audio_data.get_frames(4410, 4410, None, None).len());
             // Expected number of frames is 19 since the 20th frame starting at
@@ -366,7 +374,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             let frames = audio_data.get_frames(4410, 2205, None, None);
 
             assert_eq!(frames[0].samples[2205], frames[1].samples[0]);
@@ -380,7 +389,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             let frames_1 = audio_data.get_frames(4410, 2205, None, None);
             let frames_2 = audio_data.get_frames(4410, 2205, Some(2205), None);
 
@@ -396,7 +406,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             audio_data.get_frames(4410, 0, None, None);
         }
 
@@ -406,7 +417,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
             audio_data.get_frames(0, 4410, None, None);
         }
 
@@ -415,7 +427,8 @@ mod tests {
             let mut filepath = std::path::PathBuf::new();
             filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
-            let audio_data = read_wav_file(filepath).expect("Expected valid wav file data");
+            let audio_data =
+                AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
 
             // If the end point is greater than the number of samples, the frames
             // should cover all the samples, as if no end point was set
@@ -565,23 +578,33 @@ mod tests {
     }
 
     mod root_mean_square_tests {
-        use crate::audio_utils::root_mean_square;
+        use crate::audio_utils::AudioData;
 
         #[test]
         fn root_mean_square_works_correctly() {
-            assert_eq!(0.0, root_mean_square(vec![0.0]).unwrap());
-            assert_eq!(1.0, root_mean_square(vec![1.0, 1.0]).unwrap());
-            assert_eq!(1.0, root_mean_square(vec![-1.0, 1.0]).unwrap());
-            assert_eq!(1.0, root_mean_square(vec![-1.0, 1.0, 1.0]).unwrap());
-            assert_eq!(10.0, root_mean_square(vec![-10.0, -10.0]).unwrap());
+            assert_eq!(0.0, AudioData::root_mean_square(vec![0.0]).unwrap());
+            assert_eq!(1.0, AudioData::root_mean_square(vec![1.0, 1.0]).unwrap());
+            assert_eq!(1.0, AudioData::root_mean_square(vec![-1.0, 1.0]).unwrap());
+            assert_eq!(
+                1.0,
+                AudioData::root_mean_square(vec![-1.0, 1.0, 1.0]).unwrap()
+            );
+            assert_eq!(
+                10.0,
+                AudioData::root_mean_square(vec![-10.0, -10.0]).unwrap()
+            );
             assert!(
-                (5.0 * 10.0f64.sqrt()) - root_mean_square(vec![-10.0, 20.0]).unwrap().abs() < 1e-12
+                (5.0 * 10.0f64.sqrt())
+                    - AudioData::root_mean_square(vec![-10.0, 20.0])
+                        .unwrap()
+                        .abs()
+                    < 1e-12
             );
         }
 
         #[test]
         fn root_mean_square_of_empty_vector_is_none() {
-            assert_eq!(None, root_mean_square(vec![]));
+            assert_eq!(None, AudioData::root_mean_square(vec![]));
         }
     }
 }
