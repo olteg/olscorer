@@ -26,6 +26,11 @@ The output is a comma-separated list of notes detected in the audio.
 - GUI
 - Polyphonic music transcription. Currently, the program can only transcribe monophonic music.
 
+## Known Issues
+
+- If a note is played immediately in the audio file, with no clear onset, it will not be recognized as a note.
+- If consecutive notes overlap slightly, their pitches may not be detected correctly.
+
 ## Pitch Detection Methods
 
 The pitch detection method the program currently uses is the "McLeod Pitch Method" described by Philip McLeod and Geoff Wyvill in their paper "A Smarter Way to Find Pitch" [1].

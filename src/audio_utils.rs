@@ -18,13 +18,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::errors::WavFileError::{UnsupportedBitDepth, UnsupportedChannelCount};
+use crate::errors::{
+    FrameError::{DuplicateFrameIndices, FrameIndexOutOfBounds, FrameIndicesNotSorted},
+    WavFileError::{UnsupportedBitDepth, UnsupportedChannelCount},
+};
 use hound::{SampleFormat, WavReader};
 use std::error::Error;
 
 const MAX_24BIT: i32 = 16777215;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Frame {
     /// Starting position of this frame in the original audio
     pub start_pos: usize,
@@ -75,6 +78,55 @@ impl AudioData {
         }
 
         frames
+    }
+
+    /// Gets the audio frames which start at the given indices
+    ///
+    /// Returns a vector of audio frames wrapped in Ok if there are no errors,
+    /// and an Error otherwise.
+    pub fn get_frames_by_index(&self, indices: Vec<usize>) -> Result<Vec<Frame>, Box<dyn Error>> {
+        // Check that indices vector is sorted in ascending order
+        if !indices.windows(2).all(|w| w[0] <= w[1]) {
+            return Err(Box::new(FrameIndicesNotSorted()));
+        }
+
+        let mut frames = Vec::new();
+
+        if indices.is_empty() {
+            return Ok(frames);
+        }
+
+        for i in 0..indices.len() {
+            if indices[i] >= self.samples.len() {
+                return Err(Box::new(FrameIndexOutOfBounds(indices[i])));
+            }
+
+            if i < indices.len() - 1 {
+                if indices[i + 1] >= self.samples.len() {
+                    return Err(Box::new(FrameIndexOutOfBounds(indices[i + 1])));
+                }
+
+                if indices[i] == indices[i + 1] {
+                    return Err(Box::new(DuplicateFrameIndices(indices[i], i, i + 1)));
+                }
+
+                let mut frame_samples = vec![0.0; indices[i + 1] - indices[i] as usize];
+                frame_samples.clone_from_slice(&self.samples[indices[i]..indices[i + 1]]);
+
+                frames.push(Frame {
+                    start_pos: indices[i],
+                    samples: frame_samples,
+                });
+            } else {
+                // Push the frame starting at the last index
+                frames.push(Frame {
+                    start_pos: indices[indices.len() - 1],
+                    samples: self.samples[indices[indices.len() - 1]..self.samples.len()].to_vec(),
+                });
+            }
+        }
+
+        Ok(frames)
     }
 }
 
@@ -148,7 +200,10 @@ pub fn root_mean_square(samples: Vec<f64>) -> Option<f64> {
 
 #[cfg(test)]
 mod tests {
-    use crate::audio_utils::{read_wav_file, root_mean_square};
+    use crate::audio_utils::{read_wav_file, root_mean_square, AudioData};
+    use crate::errors::FrameError::{
+        DuplicateFrameIndices, FrameIndexOutOfBounds, FrameIndicesNotSorted,
+    };
 
     /// Tests for wav file reader
     #[test]
@@ -360,6 +415,140 @@ mod tests {
             10,
             audio_data.get_frames(4410, 4410, None, Some(50000)).len()
         );
+    }
+
+    #[test]
+    fn get_frames_by_index_returns_correct_number_of_frames() {
+        let samples = vec![0.0; 10];
+
+        let indices1 = vec![0, 2, 4, 6, 8];
+        let indices2 = vec![0, 4, 8];
+        let indices3 = vec![4, 8];
+
+        let audio_data = AudioData {
+            sample_rate: 44100,
+            duration: samples.len() as u32,
+            samples: samples,
+        };
+
+        assert_eq!(5, audio_data.get_frames_by_index(indices1).unwrap().len());
+        assert_eq!(3, audio_data.get_frames_by_index(indices2).unwrap().len());
+        assert_eq!(2, audio_data.get_frames_by_index(indices3).unwrap().len());
+    }
+
+    #[test]
+    fn get_frames_by_index_no_indices_returns_empty_vector() {
+        let samples = vec![0.0; 10];
+
+        let indices: Vec<usize> = vec![];
+
+        let audio_data = AudioData {
+            sample_rate: 44100,
+            duration: samples.len() as u32,
+            samples: samples,
+        };
+
+        assert_eq!(0, audio_data.get_frames_by_index(indices).unwrap().len());
+    }
+
+    #[test]
+    fn get_frames_by_index_index_out_of_bounds() {
+        let samples = vec![0.0; 10];
+
+        let indices: Vec<usize> = vec![20];
+
+        let audio_data = AudioData {
+            sample_rate: 44100,
+            duration: samples.len() as u32,
+            samples: samples,
+        };
+
+        assert_eq!(
+            "index `20` is out of bounds",
+            audio_data
+                .get_frames_by_index(indices)
+                .unwrap_err()
+                .to_string()
+        );
+    }
+
+    #[test]
+    fn get_frames_by_index_duplicate_indices() {
+        let samples = vec![0.0; 10];
+
+        let indices1: Vec<usize> = vec![0, 0];
+        let indices2: Vec<usize> = vec![0, 1, 1];
+
+        let audio_data = AudioData {
+            sample_rate: 44100,
+            duration: samples.len() as u32,
+            samples: samples,
+        };
+
+        assert_eq!(
+            "duplicate index `0` at positions 0 and 1 in `indices`",
+            audio_data
+                .get_frames_by_index(indices1)
+                .unwrap_err()
+                .to_string()
+        );
+        assert_eq!(
+            "duplicate index `1` at positions 1 and 2 in `indices`",
+            audio_data
+                .get_frames_by_index(indices2)
+                .unwrap_err()
+                .to_string()
+        );
+    }
+
+    #[test]
+    fn get_frames_by_index_indices_vector_must_be_sorted() {
+        let samples = vec![0.0; 10];
+
+        let indices: Vec<usize> = vec![3, 2, 1];
+
+        let audio_data = AudioData {
+            sample_rate: 44100,
+            duration: samples.len() as u32,
+            samples: samples,
+        };
+
+        assert_eq!(
+            "`indices` must be sorted in ascending order",
+            audio_data
+                .get_frames_by_index(indices)
+                .unwrap_err()
+                .to_string()
+        )
+    }
+
+    #[test]
+    fn get_frames_by_index_frames_contain_correct_samples() {
+        let samples: Vec<f64> = vec![0.0, 1.0, 2.0, 3.0, 4.0];
+
+        let indices1: Vec<usize> = vec![0, 1, 2, 3, 4];
+        let indices2: Vec<usize> = vec![0, 2, 4];
+
+        let audio_data = AudioData {
+            sample_rate: 44100,
+            duration: samples.len() as u32,
+            samples: samples,
+        };
+
+        let frames1 = audio_data.get_frames_by_index(indices1).unwrap();
+        let frames2 = audio_data.get_frames_by_index(indices2).unwrap();
+
+        assert_eq!(0.0, frames1[0].samples[0]);
+        assert_eq!(1.0, frames1[1].samples[0]);
+        assert_eq!(2.0, frames1[2].samples[0]);
+        assert_eq!(3.0, frames1[3].samples[0]);
+        assert_eq!(4.0, frames1[4].samples[0]);
+
+        assert_eq!(0.0, frames2[0].samples[0]);
+        assert_eq!(1.0, frames2[0].samples[1]);
+        assert_eq!(2.0, frames2[1].samples[0]);
+        assert_eq!(3.0, frames2[1].samples[1]);
+        assert_eq!(4.0, frames2[2].samples[0]);
     }
 
     #[test]

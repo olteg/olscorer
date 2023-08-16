@@ -129,13 +129,18 @@ impl Transcriber {
     /// Returns a vector of the notes detected in the audio.
     pub fn get_notes(audio_data: AudioData) -> Vec<Note> {
         // Scale samples
-        let abs_max_value = match audio_data.samples.iter().max_by(|a, b| a.abs().total_cmp(&b.abs())) {
+        let abs_max_value = match audio_data
+            .samples
+            .iter()
+            .max_by(|a, b| a.abs().total_cmp(&b.abs()))
+        {
             Some(value) => *value,
             None => return vec![],
         }
         .abs();
 
-        let samples: Vec<f64> = audio_data.samples
+        let samples: Vec<f64> = audio_data
+            .samples
             .iter()
             .map(|x| {
                 if abs_max_value >= f64::EPSILON {
@@ -149,22 +154,35 @@ impl Transcriber {
         let audio_data = AudioData {
             sample_rate: audio_data.sample_rate,
             duration: audio_data.duration,
-            samples: samples,
+            samples: samples.clone(),
         };
 
-        // Split samples into frames
-        let frame_width = 4096;
-        let step_size = 1024;
+        let onsets = Transcriber::get_onsets(&audio_data);
 
-        let frames = audio_data.get_frames(frame_width, step_size, None, None);
+        let frames = audio_data
+            .get_frames_by_index(onsets)
+            .expect("Error getting frames");
+
+        // Limit frame width to 8192 samples
+        let frames = frames.iter().map(|f| {
+            let frame_width = if f.samples.len() < 8192 {
+                f.samples.len()
+            } else {
+                8192
+            };
+            let samples: Vec<f64> = f.samples[0..frame_width].to_vec();
+            Frame {
+                start_pos: f.start_pos,
+                samples: samples,
+            }
+        });
 
         // Filter out silent frames by removing frames where the RMS is less
         // than 20% of the RMS of the entire audio
         // TODO: Implement a more sophisticated algorithm for filtering out
         // silent frames
         let audio_rms =
-            root_mean_square(audio_data.samples.into_iter().map(|s| s as f64).collect())
-                .unwrap_or(0.0);
+            root_mean_square(samples.into_iter().map(|s| s as f64).collect()).unwrap_or(0.0);
 
         let frames: Vec<Frame> = frames
             .into_iter()
@@ -198,5 +216,64 @@ impl Transcriber {
             .collect();
 
         notes
+    }
+
+    /// Finds the onsets of notes in the audio
+    ///
+    /// Returns a vector of indices at which note onsets were detected.
+    fn get_onsets(audio_data: &AudioData) -> Vec<usize> {
+        // Calculate envelope
+        let onset_frame_width = 1600;
+        let onset_frames = audio_data.get_frames(onset_frame_width, onset_frame_width, None, None);
+
+        // Make all samples positive
+        let abs_frames: Vec<Vec<f64>> = onset_frames
+            .iter()
+            .map(|f| f.samples.iter().map(|x| x.abs()).collect::<Vec<f64>>())
+            .collect();
+
+        let envelope: Vec<f64> = abs_frames
+            .into_iter()
+            .map(|samples| {
+                samples
+                    .into_iter()
+                    .max_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(0.0)
+            })
+            .collect();
+
+        let mut indices = vec![];
+
+        // The index of each envelope value should be at the centre of its corresponding frame
+        for frame in onset_frames {
+            indices.push(frame.start_pos + onset_frame_width / 2);
+        }
+
+        // Get differences between consecutive elements of the envelope
+        let mut differences = vec![0.0];
+
+        for i in 1..envelope.len() {
+            differences.push(envelope[i] - envelope[i - 1]);
+        }
+
+        // Get the onsets
+        let mut onsets = vec![];
+        let mut add_onset = true;
+        let difference_threshold = 0.125;
+
+        for i in 0..indices.len() {
+            if i < differences.len()
+                && differences[(indices[i] - onset_frame_width / 2) / onset_frame_width]
+                    > difference_threshold
+                && add_onset
+            {
+                onsets.push(onset_frame_width * i + onset_frame_width / 2);
+                add_onset = false;
+            } else {
+                add_onset = true;
+            }
+        }
+
+        onsets
     }
 }

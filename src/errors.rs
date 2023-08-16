@@ -28,3 +28,15 @@ pub enum WavFileError {
     #[error("unsupported channel count `{0}`, expected mono or stereo audio")]
     UnsupportedChannelCount(u16),
 }
+
+#[derive(Error, Debug, PartialEq)]
+pub enum FrameError {
+    #[error("`indices` must be sorted in ascending order")]
+    FrameIndicesNotSorted(),
+
+    #[error("index `{0}` is out of bounds")]
+    FrameIndexOutOfBounds(usize),
+
+    #[error("duplicate index `{0}` at positions {1} and {2} in `indices`")]
+    DuplicateFrameIndices(usize, usize, usize),
+}

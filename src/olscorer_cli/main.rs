@@ -37,21 +37,8 @@ fn main() {
     // Get all the notes in the audio
     let all_notes = Transcriber::get_notes(audio_data);
 
-    // Combine adjacent identical notes
-    let mut notes = vec![];
-    let mut prev_note_pos = 0;
-
-    for note in all_notes {
-        if notes.len() == 0 {
-            notes.push(note);
-        } else if notes[prev_note_pos].name != note.name {
-            notes.push(note);
-            prev_note_pos += 1;
-        }
-    }
-
     // Format and print notes as a comma-separated list
-    let output_notes = notes
+    let output_notes = all_notes
         .iter()
         .map(|note| note.name.to_string())
         .collect::<Vec<String>>()
