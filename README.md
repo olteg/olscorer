@@ -5,7 +5,10 @@
 ## Installation
 Olscorer is written in the Rust programming language. To build the project, you will need to have Rust version 1.70.0+.
 
-Run `cargo build --release` in the root directory to build the project in release mode and `cargo run` to build and run.
+Clone this repository, then run the following command in the root directory of the project to build it:
+```
+cargo build --release
+```
 
 ## Usage
 To run Olscorer from the command line, run the `olscorer-cli` executable with the path to the wav file you would like to transcribe as an argument.
