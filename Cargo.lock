@@ -207,10 +207,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "olscorer"
+name = "olscorer_cli"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "olscorer_core",
+]
+
+[[package]]
+name = "olscorer_core"
+version = "0.1.0"
+dependencies = [
  "hound",
  "rustfft",
  "thiserror",

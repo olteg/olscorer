@@ -1,0 +1,18 @@
+[package]
+name = "olscorer_core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Oleg Tretieu"]
+description = "Core library for Olscorer"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+# Audio
+hound = "3.5"
+
+# Errors
+thiserror = "1.0"
+
+# Pitch detection
+rustfft = "6.1"

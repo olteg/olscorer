@@ -1,25 +1,6 @@
-[package]
-name = "olscorer"
-version = "0.1.0"
-edition = "2021"
-authors = ["Oleg Tretieu"]
-description = "An automatic music transcription program"
-license = "GPL-3.0-or-later"
-publish = false
-
-[[bin]]
-name = "olscorer-cli"
-path = "src/olscorer_cli/main.rs"
-
-[dependencies]
-# CLI
-clap = {version = "4.3", features = ["derive"]}
-
-# Audio
-hound = "3.5"
-
-# Errors
-thiserror = "1.0"
-
-# Pitch detection
-rustfft = "6.1"
+[workspace]
+resolver = "2"
+members = [
+    "olscorer_core",
+    "olscorer_cli"
+]

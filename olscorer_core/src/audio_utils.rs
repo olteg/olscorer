@@ -211,7 +211,7 @@ mod tests {
         #[test]
         fn sample_rate_read_correctly() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -221,7 +221,7 @@ mod tests {
         #[test]
         fn duration_read_correctly() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_660Hz_22050samples_s32bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_660Hz_22050samples_s32bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -231,7 +231,7 @@ mod tests {
         #[test]
         fn reading_stereo_audio_works_correctly() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_stereo.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_stereo.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -243,21 +243,21 @@ mod tests {
         fn different_bit_depths_read_correctly() {
             let mut filepath_signed_16 = std::path::PathBuf::new();
             filepath_signed_16
-                .push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+                .push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data_signed_16 =
                 AudioData::read_wav_file(filepath_signed_16).expect("Expected valid wav file data");
 
             let mut filepath_signed_24 = std::path::PathBuf::new();
             filepath_signed_24
-                .push("./resources/test/sine_440Hz_44100samples_s24bit_44100Hz_mono.wav");
+                .push("../resources/test/sine_440Hz_44100samples_s24bit_44100Hz_mono.wav");
 
             let audio_data_signed_24 =
                 AudioData::read_wav_file(filepath_signed_24).expect("Expected valid wav file data");
 
             let mut filepath_float_32 = std::path::PathBuf::new();
             filepath_float_32
-                .push("./resources/test/sine_440Hz_44100samples_f32bit_44100Hz_mono.wav");
+                .push("../resources/test/sine_440Hz_44100samples_f32bit_44100Hz_mono.wav");
 
             let audio_data_float_32 =
                 AudioData::read_wav_file(filepath_float_32).expect("Expected valid wav file data");
@@ -276,7 +276,7 @@ mod tests {
         #[test]
         fn different_sample_rates_read_correctly() {
             let mut filepath_8000 = std::path::PathBuf::new();
-            filepath_8000.push("./resources/test/sine_440Hz_8000samples_s16bit_8000Hz_mono.wav");
+            filepath_8000.push("../resources/test/sine_440Hz_8000samples_s16bit_8000Hz_mono.wav");
 
             let audio_data_8000 =
                 AudioData::read_wav_file(filepath_8000).expect("Expected valid wav file data");
@@ -284,7 +284,7 @@ mod tests {
             assert_eq!(8000, audio_data_8000.sample_rate);
 
             let mut filepath_22050 = std::path::PathBuf::new();
-            filepath_22050.push("./resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
+            filepath_22050.push("../resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
 
             let audio_data_22050 =
                 AudioData::read_wav_file(filepath_22050).expect("Expected valid wav file data");
@@ -292,7 +292,7 @@ mod tests {
             assert_eq!(22050, audio_data_22050.sample_rate);
 
             let mut filepath_44100 = std::path::PathBuf::new();
-            filepath_44100.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath_44100.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data_44100 =
                 AudioData::read_wav_file(filepath_44100).expect("Expected valid wav file data");
@@ -314,7 +314,7 @@ mod tests {
         #[should_panic(expected = "Expected valid wav file data")]
         fn reading_non_wav_file_should_panic() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/README.md");
+            filepath.push("../resources/test/README.md");
 
             AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
         }
@@ -327,7 +327,7 @@ mod tests {
         #[test]
         fn returns_correct_number_of_frames() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -372,7 +372,7 @@ mod tests {
         #[test]
         fn overlapping_frame_contents_are_consistent() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -387,7 +387,7 @@ mod tests {
         #[test]
         fn different_starting_point_frame_contents_are_consistent() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -404,7 +404,7 @@ mod tests {
         #[should_panic]
         fn zero_step_size_should_panic() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -415,7 +415,7 @@ mod tests {
         #[should_panic(expected = "frame width must be non-negative")]
         fn zero_frame_width_should_panic() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");
@@ -425,7 +425,7 @@ mod tests {
         #[test]
         fn end_point_greater_than_number_of_samples_should_work_correctly() {
             let mut filepath = std::path::PathBuf::new();
-            filepath.push("./resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data =
                 AudioData::read_wav_file(filepath).expect("Expected valid wav file data");

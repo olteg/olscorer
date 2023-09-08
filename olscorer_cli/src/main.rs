@@ -19,8 +19,8 @@
  */
 
 use clap::Parser;
-use olscorer::audio_utils::AudioData;
-use olscorer::transcription::Transcriber;
+use olscorer_core::audio_utils::AudioData;
+use olscorer_core::transcription::Transcriber;
 
 #[derive(Debug, Parser)]
 #[clap(name = "Olscorer", author, version, about)]
