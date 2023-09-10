@@ -2,5 +2,6 @@
 resolver = "2"
 members = [
     "olscorer_core",
-    "olscorer_cli"
+    "olscorer_cli",
+    "olscorer_gui"
 ]

@@ -16,3 +16,6 @@ thiserror = "1.0"
 
 # Pitch detection
 rustfft = "6.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }

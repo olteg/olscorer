@@ -1,0 +1,17 @@
+button {
+    background-color: #ddd;
+    border-radius: 3px;
+    border: 1px solid #888;
+    width: 50%;
+    height: 40px;
+}
+
+button:enabled:hover {
+    background-color: #eee;
+    border-color: #999;
+}
+
+.label-text {
+    margin-left: 16px;
+    color: gray;
+}

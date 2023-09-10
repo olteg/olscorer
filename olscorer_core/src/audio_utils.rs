@@ -35,6 +35,7 @@ pub struct Frame {
     pub samples: Vec<f64>,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct AudioData {
     /// Sample rate (in Hz)
     pub sample_rate: u32,
@@ -284,7 +285,8 @@ mod tests {
             assert_eq!(8000, audio_data_8000.sample_rate);
 
             let mut filepath_22050 = std::path::PathBuf::new();
-            filepath_22050.push("../resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
+            filepath_22050
+                .push("../resources/test/sine_440Hz_22050samples_s16bit_22050Hz_mono.wav");
 
             let audio_data_22050 =
                 AudioData::read_wav_file(filepath_22050).expect("Expected valid wav file data");
@@ -292,7 +294,8 @@ mod tests {
             assert_eq!(22050, audio_data_22050.sample_rate);
 
             let mut filepath_44100 = std::path::PathBuf::new();
-            filepath_44100.push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
+            filepath_44100
+                .push("../resources/test/sine_440Hz_44100samples_s16bit_44100Hz_mono.wav");
 
             let audio_data_44100 =
                 AudioData::read_wav_file(filepath_44100).expect("Expected valid wav file data");
